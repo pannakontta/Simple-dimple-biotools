@@ -53,7 +53,7 @@ def filter_fastq (seqs: dict[str, tuple], gc_bounds: Union[int, float, tuple] =(
         quality = read[1].upper()
         gc_result = fq.is_relevant_gc(sequence, gc_bounds)
         length_result = fq.is_relevant_length(sequence, length_bounds)
-        quality_result = fq.is_relevant_quality(quality, quality_threshold)
+        quality_result = fq.is_relevant_quality(phred, quality_threshold)
         if gc_result & length_result & quality_result: 
         # fastq-sequences are included in the dictionary only if they satisfy all the conditions
             filtered_fastq[name] = (sequence, quality)
