@@ -36,3 +36,12 @@ EXAMPLE_FASTQ = {
 + `length_bounds` - the length interval for filtering
 + `quality_threshold` - the threshold value of the average read quality for filtering is 0 by default (phred33 scale). Reads with average quality for all nucleotides below the threshold are discarded.
 
+## Example of usage
+```
+run_dna_rna_tools("ATGCAG", "complement")
+run_dna_rna_tools("ata", "UAG", "ATGCAG", "reverse")
+```
+```
+filter_fastq(EXAMPLE_FASTQ)
+filter_fastq(EXAMPLE_FASTQ, (30, 60), (70, 80), 33)
+```
