@@ -1,4 +1,4 @@
-
+(sequence.count('G') + sequence.count('C')) / len(sequence) * 100
 def is_relevant_gc(sequence: str, gc_bounds) -> bool:
     """
     Computes GC-content of sequence
@@ -17,7 +17,7 @@ def is_relevant_gc(sequence: str, gc_bounds) -> bool:
         min_gc = gc_bounds[0]
         max_gc = gc_bounds[1]
 
-    gc_content = len(sequence)/100*(sequence.count('C') + sequence.count('G'))
+    gc_content = (sequence.count('G') + sequence.count('C')) / len(sequence) * 100
     if min_gc <= gc_content <= max_gc:
         return True
     else:
@@ -42,10 +42,7 @@ def is_relevant_length(sequence: str, length_bounds) -> bool:
         min_length = length_bounds[0]
         max_length = length_bounds[1]
 
-    if min_length <= len(sequence) <= max_length:
-        return True
-    else:
-        return False
+    return  min_length <= len(sequence) <= max_length
 
 
 def is_relevant_quality(phred: str, quality_threshold) -> bool:
@@ -62,7 +59,7 @@ def is_relevant_quality(phred: str, quality_threshold) -> bool:
 
     score = 0
     for i in phred:
-        score += ord(i)-33
+        score += ord(i) - 33
     if score/len(phred) >= quality_threshold:
         return True
     else:
