@@ -3,6 +3,7 @@
 **Simple-dimple-biotools** is a tool that allows you to perform simple procedures on with different biological data.
 ## Functional description
 File main.py contains head functions: `run_dna_rna_tools` - for working with DNA and RNA sequences and `filter_fastq` - for working with fastq-sequences
+
 File bio_files_processor.py contain functions: `convert_multiline_fasta_to_oneline` and `parse_blast_output`.
 
 **run_dna_rna_tools**
