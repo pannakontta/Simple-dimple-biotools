@@ -1,7 +1,10 @@
 from typing import Union
+import os
+from os import path
 import modules.run_dna_rna as rdr
 import modules.fastq as fq
 
+script_dir = os.path.dirname(os.path.abspath(__file__))
 
 def run_dna_rna_tools(*args):
     process = args[-1]          
@@ -38,25 +41,29 @@ def run_dna_rna_tools(*args):
         return result
 
 
-def filter_fastq (seqs: dict[str, tuple], gc_bounds: Union[int, float, tuple] =(0, 100), 
+def filter_fastq (input_fastq, output_fastq = 'output_file.fastq', gc_bounds: Union[int, float, tuple] =(0, 100), 
                   length_bounds: Union[int, tuple]=(0, 2**32), quality_threshold: int = 0) -> dict:
-    """
-    Seqs is dictionary of fastq sequences
-        key : str - name of the sequence
-        value : tuple of two strings - sequence and quality
-    """
 
-    filtered_fastq = dict()
-    # check each fastq-sequence for compliance with the specified conditions
-    for name, read in seqs.items():
-        sequence = read[0].upper() 
-        quality = read[1].upper()
-        gc_result = fq.is_relevant_gc(sequence, gc_bounds)
-        length_result = fq.is_relevant_length(sequence, length_bounds)
-        quality_result = fq.is_relevant_quality(phred, quality_threshold)
-        if gc_result & length_result & quality_result: 
-        # fastq-sequences are included in the dictionary only if they satisfy all the conditions
-            filtered_fastq[name] = (sequence, quality)
-        else:
-            continue
-    return(filtered_fastq)
+    input_fastq = os.path.join(script_dir, input_fastq)
+    output_fastq = os.path.join(script_dir, output_fastq)
+
+    with open(input_fastq) as fastq_file:
+        while True:
+            name = fastq_file.readline()
+            if not name:  # the end of file
+                break
+            sequence = fastq_file.readline()
+            comment = fastq_file.readline()
+            phred = fastq_file.readline()
+
+    	    # check each fastq-sequence for compliance with the specified conditions
+            gc_result = fq.is_relevant_gc(sequence, gc_bounds)
+            length_result = fq.is_relevant_length(sequence, length_bounds)
+            quality_result = fq.is_relevant_quality(phred, quality_threshold)
+	    
+	    # compile a file with relevant sequences
+            if gc_result and length_result and quality_result:
+		processed_sequence = []
+                processed_sequence.extend((name, sequence, comment, phred))
+                fq.write_relevant_fastq(output_fastq, processed_sequence)
+
