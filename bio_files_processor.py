@@ -11,3 +11,20 @@ def convert_multiline_fasta_to_oneline(input_fasta, output_fasta = 'output_fasta
                 sequence += line.strip()
         if sequence:
             processed_fasta.write(sequence.strip())
+
+
+def parse_blast_output(input_file, output_file = 'best_proteins'):
+    with open(input_file) as blast_results, open(output_file, 'a') as best_proteins:
+        query = False
+        for line in blast_results:
+            if query:
+                if "]" not in line:
+                    line = line.replace("...", "]")
+                    gene = line.split(']')[0]
+                else:
+                    gene = line.split(']')[0] + "]"
+                best_proteins.write(f'{gene}\n')
+            if line.startswith("Description"):
+                query = True
+            else:
+                query = False
