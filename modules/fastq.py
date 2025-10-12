@@ -67,3 +67,13 @@ def is_relevant_quality(phred: str, quality_threshold) -> bool:
         return True
     else:
         return False
+
+def write_relevant_fastq(output_fastq, processed_sequence):
+    if path.isfile(output_fastq):
+                with open(output_fastq, 'a') as output_file:
+                    for row in processed_sequence:
+                        output_file.write(row)
+    else:
+        with open(output_fastq, 'w') as output_file:
+            for row in processed_sequence:
+                output_file.write(row)
