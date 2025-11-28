@@ -1,4 +1,5 @@
-(sequence.count('G') + sequence.count('C')) / len(sequence) * 100
+import os.path as path
+
 def is_relevant_gc(sequence: str, gc_bounds) -> bool:
     """
     Computes GC-content of sequence
@@ -18,10 +19,7 @@ def is_relevant_gc(sequence: str, gc_bounds) -> bool:
         max_gc = gc_bounds[1]
 
     gc_content = (sequence.count('G') + sequence.count('C')) / len(sequence) * 100
-    if min_gc <= gc_content <= max_gc:
-        return True
-    else:
-        return False
+    return min_gc <= gc_content <= max_gc
 
 
 def is_relevant_length(sequence: str, length_bounds) -> bool:
