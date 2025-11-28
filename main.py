@@ -63,7 +63,7 @@ def filter_fastq (input_fastq, output_fastq = 'output_file.fastq', gc_bounds: Un
 	    
 	    # compile a file with relevant sequences
             if gc_result and length_result and quality_result:
-		processed_sequence = []
+                processed_sequence = []
                 processed_sequence.extend((name, sequence, comment, phred))
                 fq.write_relevant_fastq(output_fastq, processed_sequence)
 
