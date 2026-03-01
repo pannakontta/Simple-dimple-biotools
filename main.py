@@ -1,13 +1,16 @@
 from typing import Union
-import os
-from os import path
 from abc import ABC, abstractmethod
-
-
-script_dir = os.path.dirname(os.path.abspath(__file__))
+from Bio import SeqIO
+from Bio.SeqUtils import gc_fraction
+from numbers import Number
 
 
 class BiologicalSequence(ABC):
+    """
+    Abstract base class for biological sequences.
+    
+    This class defines the interface that all biological sequence types must implement.
+    """
 
     @abstractmethod
     def __len__(self) -> int:
@@ -35,7 +38,7 @@ class BiologicalSequence(ABC):
 
 
 class ManageableBiologicalSequence(BiologicalSequence):
-    def __init__(self, seq):
+    def __init__(self, seq: str):
         self.seq = seq
 
     def __len__(self):
@@ -115,29 +118,30 @@ class AminoAcidSequence(ManageableBiologicalSequence):
 
 
 
-def filter_fastq (input_fastq, output_fastq = 'output_file.fastq', gc_bounds: Union[int, float, tuple] =(0, 100), 
+def filter_fastq (input_fastq : str, output_fastq : str = 'output.fastq', gc_bounds: Union[int, float, tuple] =(0, 100), 
                   length_bounds: Union[int, tuple]=(0, 2**32), quality_threshold: int = 0) -> dict:
 
-    input_fastq = os.path.join(script_dir, input_fastq)
-    output_fastq = os.path.join(script_dir, output_fastq)
+    def parse_bounds(bounds):
+        if isinstance(bounds, Number):
+            lower_bound, upper_bound = 0, bounds 
+        else:
+            lower_bound, upper_bound = bounds
+        return lower_bound, upper_bound
+    
+    lower_gc_bound, upper_gc_bound = parse_bounds(gc_bounds)
+    lower_length_bound, upper_length_bound = parse_bounds(length_bounds)
+          
+    filtered_records = [] 
+    with open(input_fastq) as handle:
+        for seq_record in SeqIO.parse(handle, "fastq"):
+            gc_content = gc_fraction(seq_record.seq)*100
+            seq_length = len(seq_record)
+            qualities = seq_record.letter_annotations["phred_quality"]
+            avg_quality = sum(qualities) / len(qualities)
+            if (lower_gc_bound <= gc_content <= upper_gc_bound and
+                lower_length_bound <= seq_length <= upper_length_bound and
+                quality_threshold <= avg_quality):
+                filtered_records.append(seq_record)
 
-    with open(input_fastq) as fastq_file:
-        while True:
-            name = fastq_file.readline()
-            if not name:  # the end of file
-                break
-            sequence = fastq_file.readline()
-            comment = fastq_file.readline()
-            phred = fastq_file.readline()
-
-    	    # check each fastq-sequence for compliance with the specified conditions
-            gc_result = fq.is_relevant_gc(sequence, gc_bounds)
-            length_result = fq.is_relevant_length(sequence, length_bounds)
-            quality_result = fq.is_relevant_quality(phred, quality_threshold)
-	    
-	    # compile a file with relevant sequences
-            if gc_result and length_result and quality_result:
-                processed_sequence = []
-                processed_sequence.extend((name, sequence, comment, phred))
-                fq.write_relevant_fastq(output_fastq, processed_sequence)
+    SeqIO.write(filtered_records, output_fastq, "fastq")
 
