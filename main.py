@@ -1,44 +1,118 @@
 from typing import Union
 import os
 from os import path
-import modules.run_dna_rna as rdr
-import modules.fastq as fq
+from abc import ABC, abstractmethod
+
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
-def run_dna_rna_tools(*args):
-    process = args[-1]          
-    sequences = args[:-1]       # get any number of sequences
-    checking = rdr.check_sequnces(sequences)[0]
 
-    if process == "is_nucleic_acid":
-        result = checking
-    elif False in checking:
-        result = f"Invalid sequences: {rdr.check_sequnces(sequences)[1]}"
-    else:
-        result = []
-        # applying the tool to each sequence
-        for seq in sequences:
-            if "U" in seq.upper():
-                is_rna = True
-            else:
-                is_rna = False
-            # Procedure selection
-            if process == "transcribe":
-                inter_res = rdr.transcribe(seq, is_rna)
-            elif process == "reverse":
-                inter_res = rdr.reverse(seq)
-            elif process == "complement":
-                inter_res = rdr.complement(seq, is_rna)
-            elif process == "reverse_complement":
-                inter_res = rdr.reverse(seq)
-                inter_res = rdr.complement(inter_res, is_rna)
-            result.append(inter_res)
+class BiologicalSequence(ABC):
 
-    if len(result) == 1:
-        return result[0]
-    else:
-        return result
+    @abstractmethod
+    def __len__(self) -> int:
+        pass
+
+    @abstractmethod
+    def __getitem__(self, index):
+        pass
+
+    @abstractmethod
+    def __str__(self):
+        pass
+
+    @abstractmethod
+    def __iter__(self):
+        pass
+
+    @abstractmethod
+    def __contains__(self):
+        pass
+
+    @abstractmethod
+    def check_alphabet(self):
+        pass
+
+
+class ManageableBiologicalSequence(BiologicalSequence):
+    def __init__(self, seq):
+        self.seq = seq
+
+    def __len__(self):
+        return len(self.seq)
+    
+    def __getitem__(self, index):
+        if isinstance(index, int) or isinstance(index, slice):
+            return self.seq[index]
+
+    def __str__(self):
+        return self.seq
+    
+    def __iter__(self):
+        return iter(self.seq)
+
+    def __contains__(self, item):
+        return item in self.seq
+    
+    def _check_alphabet(self, alphabet):
+        return set(self.seq.upper()).issubset(alphabet)
+
+
+class NucleicAcidSequence(ManageableBiologicalSequence):
+
+    def __init__(self, seq):
+        super().__init__(seq)
+        alphabet = 'ATGCU'
+        if not self.check_alphabet(alphabet):
+            raise ValueError("Invalid characters in the sequence. Only A, T, G, C, U are allowed.")
+
+    def reverse(self):
+        return self.seq[::-1]
+
+    def complement(self):
+        if 'U' in self.seq.upper():
+            complement_pairs = str.maketrans("AUGCaugc", "UACGuacg")
+        else:
+            complement_pairs = str.maketrans("ATGCatgc", "TACGtacg")
+        return self.seq.translate(complement_pairs)
+    
+    def reverse_complement(self):
+        complementary_seq = self.complement()
+        return complementary_seq[::-1]
+
+
+class DNASequence(NucleicAcidSequence):
+    def __init__(self, seq):
+        super().__init__(seq)
+        if 'U' in self.seq.upper():
+            raise ValueError("RNA instead of DNA at the input")
+
+    def transcribe(self):
+        return self.seq.replace('T', 'U').replace('t', 'u')
+
+
+class RNASequence(NucleicAcidSequence):
+    def __init__(self, seq):
+        super().__init__(seq)
+        if 'T' in self.seq.upper():
+            raise ValueError('DNA instead of RNA at the input')
+        
+
+class AminoAcidSequence(ManageableBiologicalSequence):
+    def __init__(self, seq):
+        super().__init__(seq)
+        alphabet = 'ARNDCQEGHILKMFPSTWYV'
+        if not self.check_alphabet(alphabet):
+            raise ValueError("Invalid characters in the Amino Acid sequence.")
+
+    def get_start_codon_idxs(self):
+        idxs = []
+        for i in range(len(self.seq)):
+            if self.seq[i] == 'M':
+                idxs.append(i)
+        return idxs
+
+
 
 
 def filter_fastq (input_fastq, output_fastq = 'output_file.fastq', gc_bounds: Union[int, float, tuple] =(0, 100), 
