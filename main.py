@@ -38,6 +38,13 @@ class BiologicalSequence(ABC):
 
 
 class ManageableBiologicalSequence(BiologicalSequence):
+    """
+    Concrete implementation of BiologicalSequence with basic sequence operations.
+    
+    This class provides common functionality for managing biological sequences,
+    including length, indexing, string conversion, and iteration.
+    """
+    
     def __init__(self, seq: str):
         self.seq = seq
 
@@ -62,11 +69,10 @@ class ManageableBiologicalSequence(BiologicalSequence):
 
 
 class NucleicAcidSequence(ManageableBiologicalSequence):
-
     def __init__(self, seq):
         super().__init__(seq)
         alphabet = 'ATGCU'
-        if not self.check_alphabet(alphabet):
+        if not self._check_alphabet(alphabet):
             raise ValueError("Invalid characters in the sequence. Only A, T, G, C, U are allowed.")
 
     def reverse(self):
@@ -85,6 +91,15 @@ class NucleicAcidSequence(ManageableBiologicalSequence):
 
 
 class DNASequence(NucleicAcidSequence):
+    """
+    Represents a DNA sequence composed of A, T, G, C nucleotides.
+
+    Inherits from NucleicAcidSequence and provides a transcription method to
+    convert DNA into its RNA counterpart.
+
+    Such methods as reverse, complement, and reverse_complement are inherited from NucleicAcidSequence.
+    """
+
     def __init__(self, seq):
         super().__init__(seq)
         if 'U' in self.seq.upper():
@@ -95,6 +110,11 @@ class DNASequence(NucleicAcidSequence):
 
 
 class RNASequence(NucleicAcidSequence):
+    """
+    Represents an RNA sequence composed of A, U, G, C nucleotides.
+    
+    Such methods as reverse, complement, and reverse_complement are inherited from NucleicAcidSequence.
+    """
     def __init__(self, seq):
         super().__init__(seq)
         if 'T' in self.seq.upper():
@@ -102,6 +122,10 @@ class RNASequence(NucleicAcidSequence):
         
 
 class AminoAcidSequence(ManageableBiologicalSequence):
+    """
+    Represents an amino acid sequence composed of 20 standard amino acids.
+    
+    Provides a method to identify the indices of start codons (Methionine, 'M') in the sequence."""
     def __init__(self, seq):
         super().__init__(seq)
         alphabet = 'ARNDCQEGHILKMFPSTWYV'
@@ -119,7 +143,22 @@ class AminoAcidSequence(ManageableBiologicalSequence):
 
 
 def filter_fastq (input_fastq : str, output_fastq : str = 'output.fastq', gc_bounds: Union[int, float, tuple] =(0, 100), 
-                  length_bounds: Union[int, tuple]=(0, 2**32), quality_threshold: int = 0) -> dict:
+                  length_bounds: Union[int, tuple]=(0, 2**32), quality_threshold: int = 0):
+    """
+    Filter sequences from a FASTQ file by GC content, length, and quality.
+    
+    Reads records from `input_fastq` and writes those meeting the provided
+    criteria to `output_fastq` in FASTQ format.
+    
+    Args:
+        input_fastq (str): Path to input FASTQ file.
+        output_fastq (str): Path where filtered records will be written.
+        gc_bounds (Union[int, float, tuple]): GC percentage boundaries. If a
+            number, lower bound is 0; if a tuple, it should be (min, max).
+        length_bounds (Union[int, tuple]): Sequence length boundaries. If an
+            int, lower bound is 0; if a tuple, it should be (min, max).
+        quality_threshold (int): Minimum average PHRED quality score.
+    """
 
     def parse_bounds(bounds):
         if isinstance(bounds, Number):
