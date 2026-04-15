@@ -142,8 +142,10 @@ class AminoAcidSequence(ManageableBiologicalSequence):
 
 
 
-def filter_fastq (input_fastq : str, output_fastq : str = 'output.fastq', gc_bounds: Union[int, float, tuple] =(0, 100), 
-                  length_bounds: Union[int, tuple]=(0, 2**32), quality_threshold: int = 0):
+def filter_fastq(input_fastq: str, output_fastq: str = 'output.fastq', 
+                 gc_bounds: Union[int, float, tuple] = (0, 100), 
+                 length_bounds: Union[int, tuple] = (0, 2**32), 
+                 quality_threshold: int = 0):
     """
     Filter sequences from a FASTQ file by GC content, length, and quality.
     
@@ -162,25 +164,26 @@ def filter_fastq (input_fastq : str, output_fastq : str = 'output.fastq', gc_bou
 
     def parse_bounds(bounds):
         if isinstance(bounds, Number):
-            lower_bound, upper_bound = 0, bounds 
-        else:
-            lower_bound, upper_bound = bounds
-        return lower_bound, upper_bound
+            return 0, bounds
+        return bounds[0], bounds[1]
     
     lower_gc_bound, upper_gc_bound = parse_bounds(gc_bounds)
     lower_length_bound, upper_length_bound = parse_bounds(length_bounds)
           
-    filtered_records = [] 
-    with open(input_fastq) as handle:
-        for seq_record in SeqIO.parse(handle, "fastq"):
-            gc_content = gc_fraction(seq_record.seq)*100
+    with open(input_fastq) as input_handle, \
+         open(output_fastq, 'w') as output_handle:
+        
+        for seq_record in SeqIO.parse(input_handle, "fastq"):
+            
+            gc_content = gc_fraction(seq_record.seq) * 100
             seq_length = len(seq_record)
             qualities = seq_record.letter_annotations["phred_quality"]
             avg_quality = sum(qualities) / len(qualities)
+            
             if (lower_gc_bound <= gc_content <= upper_gc_bound and
                 lower_length_bound <= seq_length <= upper_length_bound and
                 quality_threshold <= avg_quality):
-                filtered_records.append(seq_record)
+                SeqIO.write(seq_record, output_handle, "fastq")
 
-    SeqIO.write(filtered_records, output_fastq, "fastq")
+    
 
